@@ -1,22 +1,23 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
-const express = require('express');
-const QRCode = require('qrcode');
-const app = express();
-const port = process.env.PORT || 3000;
+const qrcode = require('qrcode-terminal'); // Solo usamos este
+// const express = require('express'); ❌ Ya no se necesita
 
-let qrCodeData = '';
+// let qrCodeData = ''; ❌ Ya no se usa
 
 const client = new Client({
+    authStrategy: new LocalAuth(), // ← Así la sesión se guarda
     puppeteer: {
-        headless: false, // ← así sí verás el QR
+        headless: true, // Abre el navegador para ver qué hace
     }
 });
 
+// === Muestra QR en consola
 client.on('qr', qr => {
-    console.log(`🔁 Escanea el QR en: http://localhost:${port}`);
-    qrCodeData = qr;
+    console.log('🔁 Escanea el siguiente código QR:');
+    qrcode.generate(qr, { small: true });
 });
 
+// === Logs básicos
 client.on('ready', () => console.log('✅ Bot conectado correctamente'));
 client.on('authenticated', () => console.log('🔐 Sesión autenticada.'));
 client.on('auth_failure', msg => console.error('❌ Falló la autenticación:', msg));
@@ -94,26 +95,5 @@ client.on('message', async msg => {
     }
 });
 
-// === RUTA QR
-app.get('/', (req, res) => {
-    if (!qrCodeData) return res.send('⏳ QR no generado aún. Espera unos segundos...');
-    QRCode.toDataURL(qrCodeData, (err, url) => {
-        if (err) return res.send('❌ Error al generar el QR');
-        res.send(`
-            <h2>📲 Escanea este código QR con tu WhatsApp</h2>
-            <img src="${url}" />
-            <p>Actualiza la página si no carga bien.</p>
-        `);
-    });
-});
-
-// === RUTA STATUS
-app.get('/status', (req, res) => {
-    res.send('✅ Bot activo');
-});
-
-app.listen(port, () => {
-    console.log(`🌐 Abre en tu navegador: http://localhost:${port}`);
-});
-
+// === Iniciar bot
 client.initialize();
