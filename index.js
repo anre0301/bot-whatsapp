@@ -7,8 +7,9 @@ const port = process.env.PORT || 3000;
 let qrCodeData = '';
 
 const client = new Client({
-    authStrategy: new LocalAuth({ clientId: 'bot_julio' }),
-    puppeteer: { headless: true, args: ['--no-sandbox'] }
+    puppeteer: {
+        headless: false, // ← así sí verás el QR
+    }
 });
 
 client.on('qr', qr => {
